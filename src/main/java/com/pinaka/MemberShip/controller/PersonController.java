@@ -18,7 +18,7 @@ import java.util.List;
 import static com.pinaka.MemberShip.utils.Constants.*;
 
 @RestController
-@CrossOrigin(origins = "https://pinaka.netlify.app")
+//@CrossOrigin(origins = "https://pinaka.netlify.app")
 public class PersonController {
 
     @Autowired private PersonService personService;

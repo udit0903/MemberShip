@@ -1,6 +1,7 @@
 package com.pinaka.MemberShip.repository;
 
 
+import com.mongodb.client.gridfs.model.GridFSFile;
 import com.pinaka.MemberShip.collection.Fee;
 import com.pinaka.MemberShip.collection.MembershipDetail;
 import com.pinaka.MemberShip.collection.Owner;
@@ -10,19 +11,26 @@ import com.pinaka.MemberShip.dto.response.OwnerDetailResponse;
 import com.pinaka.MemberShip.dto.response.PersonResponse;
 import com.pinaka.MemberShip.service.PersonService;
 import org.apache.commons.lang3.time.DateUtils;
+
+
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.gridfs.GridFsResource;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Repository;
 
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.util.FileCopyUtils;
 
 import static com.pinaka.MemberShip.utils.Constants.DATE_PATTERN;
 
@@ -32,6 +40,9 @@ public  class PersonRepository  {
 
     @Autowired
     private MongoTemplate mongoTemplate;
+
+    @Autowired
+    private GridFsTemplate gridFsTemplate;
 
 
 
@@ -64,19 +75,54 @@ public  class PersonRepository  {
 
 
 
-    public List<Owner> getAllPerson(String name){
-
+    public List<PersonResponse> getAllPerson(String name){
 
         Query query = new Query(Criteria.where("firstName").is(name));
-        query.fields().include("fee");
         query.fields().include("person");
+        List<Owner> ownerList= mongoTemplate.find(query,Owner.class,"owner");
+        List<Person>  personList=ownerList.get(0).getPerson();
+        List<PersonResponse>  personResponseList=new ArrayList<>();
 
-    return mongoTemplate.find(query,Owner.class);
+        for (Person person: personList){
+
+            PersonResponse personResponse=new PersonResponse();
+            GridFSFile file = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(  person.getObjectId())));
+
+                if (file != null) {
+                    try {
+                        GridFsResource resource = gridFsTemplate.getResource(file);
+                        InputStream   inputStream = resource.getInputStream();
+                        personResponse.setImage( FileCopyUtils.copyToByteArray(inputStream));
+                        inputStream.close();
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to retrieve image", e);
+                    }
+                }
+                personResponse.setPersonId(person.getPersonId());
+                personResponse.setFirstName(person.getFirstName());
+            MembershipDetail membershipDetail= person.getMembershipDetail();
+            personResponse.setPersonId(person.getPersonId());
+            personResponse.setContactNo(person.getContactNo());
+
+            personResponse.setLastName(person.getLastName());
+
+            personResponse.setStartDate(membershipDetail.getStartDate());
+            personResponse.setEndDate(membershipDetail.getEndDate());
+            personResponse.setMembership(membershipDetail.getMembership());
+            personResponse.setTotal(membershipDetail.getTotal());
+                 //personResponse=getPersonDetails(person);
+            personResponseList.add(personResponse);
+
+
+        }
+
+    return personResponseList;
     }
 
   public void addPersonToDB(Person person,Long id ){
 
       Owner owner = mongoTemplate.findById(id,Owner.class);
+
       List<Person> personList=owner.getPerson();
       personList.add(person);
      final Owner updated =mongoTemplate.save(owner);
@@ -84,18 +130,52 @@ public  class PersonRepository  {
 
     public PersonResponse findByPeronId(Long ownerId,String personId){
 
+
         Query query = new Query(Criteria.where("_id").is(ownerId));
         query.fields().include("person");
         List<Owner> ownerList= mongoTemplate.find(query,Owner.class,"owner");
         List<Person>  personList=ownerList.get(0).getPerson();
         PersonResponse personResponse=new PersonResponse();
 
-        for (Person person : personList){
+
+
+
+        for (Person person: personList){
             if(person.getPersonId().equals(personId)){
-              personResponse=getPersonDetails(person);
+
+                GridFSFile file = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(  person.getObjectId())));
+
+                if (file != null) {
+
+
+                    try {
+                        GridFsResource resource = gridFsTemplate.getResource(file);
+                        InputStream   inputStream = resource.getInputStream();
+                      personResponse.setImage( FileCopyUtils.copyToByteArray(inputStream));
+                        inputStream.close();
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to retrieve image", e);
+                    }
+                }
+
+                personResponse.setPersonId(person.getPersonId());
+                personResponse.setFirstName(person.getFirstName());
+                MembershipDetail membershipDetail= person.getMembershipDetail();
+                personResponse.setPersonId(person.getPersonId());
+                personResponse.setContactNo(person.getContactNo());
+
+                personResponse.setLastName(person.getLastName());
+
+                personResponse.setStartDate(membershipDetail.getStartDate());
+                personResponse.setEndDate(membershipDetail.getEndDate());
+                personResponse.setMembership(membershipDetail.getMembership());
+                personResponse.setTotal(membershipDetail.getTotal());
+            //  personResponse=getPersonDetails(person);
             }
 
         }
+
+
 
         return personResponse;
 

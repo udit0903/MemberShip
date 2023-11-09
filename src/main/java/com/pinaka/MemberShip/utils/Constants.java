@@ -6,6 +6,7 @@ public class Constants {
     public static final String ALL_PERSON_GET_URL= "/"+VERSION+"/home/allPerson";
 
     public static final String   API_TYPE_RESPONSE="application/json";
+    public static final String   API_TYPE_RESPONSE2= "multipart/form-data";
 
     public static final String ADD_PERSON_PUT_URL= "/"+VERSION+"/addPerson";
 

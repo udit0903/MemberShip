@@ -12,12 +12,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import java.util.List;
 
 import static com.pinaka.MemberShip.utils.Constants.*;
 
 @RestController
+@EnableWebMvc
 //@CrossOrigin(origins = "https://pinaka.netlify.app")
 public class PersonController {
 
@@ -25,12 +27,13 @@ public class PersonController {
 
 
     @GetMapping(value= ALL_PERSON_GET_URL ,produces =API_TYPE_RESPONSE)
-    public ResponseEntity<List<Owner>> getAllPerson() {
+    public ResponseEntity<List<PersonResponse>> getAllPerson() {
 
 
         String firstName="Udit";
+        List<PersonResponse> personResponseList=  personService.getAllPerson(firstName);
 
-       return new ResponseEntity<>(personService.getAllPerson(firstName), HttpStatus.OK);
+       return new ResponseEntity<>(personResponseList, HttpStatus.OK);
 
 
     }
@@ -46,8 +49,8 @@ public class PersonController {
     }
 
 
-    @PutMapping (value= ADD_PERSON_PUT_URL ,consumes = {API_TYPE_RESPONSE},produces = {API_TYPE_RESPONSE})
-    public void addPerson(@RequestBody PersonDetail personDetails) {
+    @PutMapping (value= ADD_PERSON_PUT_URL ,consumes = {API_TYPE_RESPONSE2},produces = {API_TYPE_RESPONSE})
+    public void addPerson(@ModelAttribute  PersonDetail personDetails) {
         Long ownerId=16677L;
         personService.addPersonDetails(personDetails,ownerId);
     }

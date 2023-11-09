@@ -1,5 +1,6 @@
 package com.pinaka.MemberShip.service;
 
+import com.pinaka.MemberShip.collection.Image;
 import com.pinaka.MemberShip.collection.MembershipDetail;
 import com.pinaka.MemberShip.collection.Owner;
 import com.pinaka.MemberShip.collection.Person;
@@ -10,12 +11,16 @@ import com.pinaka.MemberShip.helper.PersonServiceHelper;
 
 import com.pinaka.MemberShip.repository.PersonRepository;
 import org.apache.commons.lang3.time.DateUtils;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -30,9 +35,11 @@ public class PersonService {
 
     @Autowired
      private PersonRepository personRepository;
+    @Autowired
+    private GridFsTemplate gridFsTemplate;
 
-    public List<Owner> getAllPerson(String firstName){
-        List<Owner> personDetail =new ArrayList<>();
+    public List<PersonResponse> getAllPerson(String firstName){
+        List<PersonResponse> personDetail =new ArrayList<>();
 
         personDetail=personRepository.getAllPerson( firstName);
         return personDetail;
@@ -50,8 +57,26 @@ public class PersonService {
 
         Person person =new Person();
         MembershipDetail membershipDetail= new MembershipDetail();
+        MultipartFile file=personDetails.getMultipartFile();
+      /*  try {
+            Image image = new Image();
+            image.setName(file.getOriginalFilename());
+            image.setData(file.getBytes());
+            person.setImage(image);
 
-        person.setPersonId(personDetails.getPersonId());
+        } catch (IOException e) {
+
+        }*/
+        try {
+            ObjectId fileId = gridFsTemplate.store(file.getInputStream(), file.getOriginalFilename(), file.getContentType());
+            person.setObjectId(fileId);
+            person.setPersonId(fileId.toString());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store image", e);
+        }
+
+
+        //person.setPersonId(personDetails.getPersonId());
         person.setAge(personDetails.getAge());
         person.setContactNo(personDetails.getContactNo());
         person.setGender(personDetails.getGender());

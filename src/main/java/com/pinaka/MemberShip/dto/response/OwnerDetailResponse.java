@@ -1,6 +1,7 @@
 package com.pinaka.MemberShip.dto.response;
 
 import com.pinaka.MemberShip.collection.Fee;
+import com.pinaka.MemberShip.collection.Image;
 import com.pinaka.MemberShip.collection.Person;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +15,8 @@ import java.util.List;
 public class OwnerDetailResponse {
 
     private String ownerId;
+
+    private Image image;
 
     private String contactNo;
 

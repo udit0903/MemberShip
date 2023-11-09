@@ -19,8 +19,9 @@ public class Owner {
     @Id
     private  Long id;
     @Field("ownerId")
-
     private String ownerId;
+    @Field("image")
+    private Image image;
     @Field("contactNo")
     private String contactNo;
     @Field("firstName")
